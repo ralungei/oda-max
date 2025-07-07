@@ -15,7 +15,6 @@ const theme = createTheme({
   spacing: 8,
 });
 
-// Apply component overrides
 theme.components = getComponentOverrides(theme);
 
 export default theme;

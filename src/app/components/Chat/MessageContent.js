@@ -56,7 +56,6 @@ export default function MessageContent({ message, isFromBot }) {
     case "attachment":
       const attachment = payload.attachment;
 
-      // Si es imagen, mostrarla directamente
       if (attachment.type.startsWith("image/")) {
         return (
           <Box

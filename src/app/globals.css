@@ -1,12 +1,9 @@
-/* En lugar de * { margin: 0; padding: 0; } */
-
 html,
 body {
   margin: 0;
   padding: 0;
 }
 
-/* Solo resetear elementos que rompen layouts */
 body,
 h1,
 h2,
@@ -17,12 +14,10 @@ h6 {
   margin: 0;
 }
 
-/* Mantener el resto igual */
 * {
   box-sizing: border-box;
 }
 
-/* Y agrega esto para markdown */
 .markdown-content > * + * {
   margin-top: 1rem;
 }

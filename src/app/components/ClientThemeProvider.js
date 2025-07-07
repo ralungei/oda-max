@@ -1,4 +1,3 @@
-// components/ClientThemeProvider.js
 "use client";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { ProjectProvider } from "../contexts/ProjectsContext";

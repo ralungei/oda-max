@@ -1,4 +1,3 @@
-// src/app/services/oracleSpeechService.js
 "use client";
 
 const createOracleSpeechService = () => {
@@ -29,7 +28,6 @@ const createOracleSpeechService = () => {
       };
       ws.onclose = (ev) => {};
 
-      // Esperar a que abra
       await new Promise((resolve) => {
         ws.onopen = resolve;
       });

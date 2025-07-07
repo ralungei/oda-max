@@ -13,7 +13,6 @@ import {
   DialogTitle,
   FormControl,
   FormControlLabel,
-  FormLabel,
   IconButton,
   Radio,
   RadioGroup,
@@ -232,7 +231,6 @@ export default function ProjectModal({
                   fullWidth
                   error={!!errors.name}
                   helperText={errors.name}
-                  // autoFocus
                 />
 
                 <TextField

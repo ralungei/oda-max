@@ -159,13 +159,11 @@ export default function MessageItem({ message }) {
             width: "auto",
             ...(message.messagePayload.type === "attachment"
               ? {
-                  // Sin fondo para attachments
                   background: "transparent",
                   padding: 0,
                   borderRadius: 0,
                 }
               : {
-                  // Estilo normal para otros mensajes
                   borderRadius: "22px 22px 5px 22px",
                   background: `linear-gradient(135deg, ${alpha(
                     primaryColor,

@@ -1,6 +1,3 @@
-// src/app/utils/messageUtils.js
-
-// Create a user message
 export const createUserMessage = (text, userId) => {
   return {
     userId,
@@ -13,7 +10,6 @@ export const createUserMessage = (text, userId) => {
   };
 };
 
-// Create a chat suggestion message
 export const createSuggestionRequest = (query, userId) => {
   return {
     userId,
@@ -25,22 +21,18 @@ export const createSuggestionRequest = (query, userId) => {
   };
 };
 
-// Helper to determine if message is from bot
 export const isFromBot = (message) => {
   return message.from && message.from.type === "bot";
 };
 
-// Helper to determine if message is from user
 export const isFromUser = (message) => {
   return message.from === null;
 };
 
-// Helper to determine message type
 export const getMessageType = (message) => {
   return message.messagePayload?.type || "unknown";
 };
 
-// Extract text content from a message for preview/summary
 export const getMessageText = (message) => {
   const payload = message.messagePayload;
   if (!payload) return "";
@@ -61,7 +53,6 @@ export const getMessageText = (message) => {
   }
 };
 
-// Format a date from ISO string to a readable format
 export const formatMessageTime = (dateString) => {
   try {
     const date = new Date(dateString);
@@ -71,7 +62,6 @@ export const formatMessageTime = (dateString) => {
   }
 };
 
-// Extract code blocks from a message for proper formatting
 export const extractCodeBlocks = (text) => {
   const codeBlockRegex = /```(\w+)?\n([\s\S]*?)\n```/g;
   const matches = [];
@@ -87,7 +77,6 @@ export const extractCodeBlocks = (text) => {
   return matches;
 };
 
-// Convert markdown links to HTML
 export const convertMarkdownLinks = (text) => {
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   return text.replace(
@@ -96,15 +85,12 @@ export const convertMarkdownLinks = (text) => {
   );
 };
 
-// Process message content for display
 export const processMessageContent = (text) => {
   if (!text) return "";
 
-  // First handle code blocks to avoid interference with other replacements
   const codeBlocks = extractCodeBlocks(text);
   let processedText = text;
 
-  // Replace code blocks with placeholders
   codeBlocks.forEach((block, index) => {
     const placeholder = `__CODE_BLOCK_${index}__`;
     processedText = processedText.replace(
@@ -113,10 +99,8 @@ export const processMessageContent = (text) => {
     );
   });
 
-  // Convert markdown links
   processedText = convertMarkdownLinks(processedText);
 
-  // Restore code blocks
   codeBlocks.forEach((block, index) => {
     const placeholder = `__CODE_BLOCK_${index}__`;
     const formattedCode = `<pre><code class="language-${block.language}">${block.code}</code></pre>`;
@@ -126,7 +110,6 @@ export const processMessageContent = (text) => {
   return processedText;
 };
 
-// Format the timestamp for conversation history
 export const formatConversationTime = (dateString) => {
   try {
     const date = new Date(dateString);
@@ -148,7 +131,6 @@ export const formatConversationTime = (dateString) => {
   }
 };
 
-// Truncate text for previews
 export const truncateText = (text, maxLength = 60) => {
   if (!text) return "";
   if (text.length <= maxLength) return text;
@@ -156,10 +138,7 @@ export const truncateText = (text, maxLength = 60) => {
   return text.substring(0, maxLength).trim() + "...";
 };
 
-// Parse and sanitize HTML content
 export const sanitizeHtml = (html) => {
-  // This is a simple implementation
-  // In a production app, use a proper HTML sanitizer library
   if (!html) return "";
 
   return html
@@ -168,7 +147,6 @@ export const sanitizeHtml = (html) => {
     .replace(/javascript:/g, "");
 };
 
-// Check if a message contains an image
 export const hasImage = (message) => {
   const payload = message.messagePayload;
   if (!payload) return false;
@@ -188,7 +166,6 @@ export const hasImage = (message) => {
   return false;
 };
 
-// Convert a message to a shareable format (e.g., for export)
 export const messageToShareableFormat = (message) => {
   if (!message || !message.messagePayload) return "";
 
@@ -200,11 +177,7 @@ export const messageToShareableFormat = (message) => {
   return `${sender} (${time}): ${content}`;
 };
 
-// Add this to src/app/utils/messageUtils.js
-
-// Convert WebSDK message to our app format if needed
 export const adaptSdkMessage = (sdkMessage, userId) => {
-  // Make sure we have a valid message
   if (!sdkMessage || !sdkMessage.messagePayload) {
     console.warn("Invalid message format received from SDK");
     return {

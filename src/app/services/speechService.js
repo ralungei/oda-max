@@ -1,4 +1,3 @@
-// Speech recognition service
 const createSpeechService = () => {
   let recognition = null;
 

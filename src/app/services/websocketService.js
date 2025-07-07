@@ -1,4 +1,3 @@
-// WebSocket service for Oracle Digital Assistant
 const createWebSocketService = ({ userId, onMessage, onStatusChange }) => {
   let ws = null;
   let reconnectTimer = null;
@@ -15,14 +14,12 @@ const createWebSocketService = ({ userId, onMessage, onStatusChange }) => {
       return;
     }
 
-    // Clear any existing timers
     if (pingTimer) clearInterval(pingTimer);
     if (reconnectTimer) clearTimeout(reconnectTimer);
 
     const url = `wss://${uri}/chat/v1/chats/sockets/websdk?channelId=${channelId}&userId=${userId}`;
 
     try {
-      // Set status to connecting
       onStatusChange(0); // 0 = CONNECTING
 
       ws = new WebSocket(url);
@@ -31,7 +28,6 @@ const createWebSocketService = ({ userId, onMessage, onStatusChange }) => {
         console.log("Connected to chat service");
         onStatusChange(1); // 1 = OPEN
 
-        // Setup ping interval to keep connection alive
         pingTimer = setInterval(() => {
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ state: { type: "ping" } }));
@@ -43,13 +39,11 @@ const createWebSocketService = ({ userId, onMessage, onStatusChange }) => {
         try {
           const data = JSON.parse(event.data);
 
-          // Handle ping/pong messages
           if (data.state && data.state.type === "ping") {
             ws.send(JSON.stringify({ state: { type: "pong" } }));
             return;
           }
 
-          // For normal messages, call the onMessage callback
           onMessage(data);
         } catch (e) {
           console.error("Error parsing message:", e);
@@ -60,7 +54,6 @@ const createWebSocketService = ({ userId, onMessage, onStatusChange }) => {
         console.log("Disconnected from chat service");
         onStatusChange(3); // 3 = CLOSED
 
-        // Try to reconnect after interval
         reconnectTimer = setTimeout(connect, reconnectInterval);
       };
 
@@ -72,7 +65,6 @@ const createWebSocketService = ({ userId, onMessage, onStatusChange }) => {
       console.error("Error setting up WebSocket:", err);
       onStatusChange(3); // 3 = CLOSED
 
-      // Try to reconnect after interval
       reconnectTimer = setTimeout(connect, reconnectInterval);
     }
 

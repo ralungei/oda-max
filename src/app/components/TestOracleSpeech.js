@@ -1,4 +1,3 @@
-// src/app/components/TestOracleSpeech.js
 "use client";
 
 import { Box, Button, Chip, Paper, Typography } from "@mui/material";
@@ -18,12 +17,10 @@ export default function TestOracleSpeech() {
     const service = createOracleSpeechService();
     setSpeechService(service);
 
-    // Verificar soporte
     if (!service.isSupported()) {
       setError("Tu navegador no soporta las APIs necesarias");
     }
 
-    // Actualizar estado cada segundo
     const interval = setInterval(() => {
       if (service.getState) {
         setServiceState(service.getState());
@@ -79,7 +76,6 @@ export default function TestOracleSpeech() {
       setError(err.message);
     }
 
-    // Actualizar estado del servicio
     if (speechService.getState) {
       setServiceState(speechService.getState());
     }
@@ -93,7 +89,6 @@ export default function TestOracleSpeech() {
     setIsRecording(false);
     addLog("Grabación detenida", "info");
 
-    // Actualizar estado del servicio
     if (speechService.getState) {
       setServiceState(speechService.getState());
     }

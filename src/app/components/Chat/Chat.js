@@ -125,8 +125,6 @@ export default function Chat({ onAddProject, onEditProject, onDeleteProject }) {
         file.type.startsWith("image/") || file.type === "application/pdf";
 
       if (isValidType) {
-        // Pass the file to ChatInputBar via a callback or ref
-        // We'll need to modify ChatInputBar to accept external file setting
         window.dispatchEvent(new CustomEvent("fileDropped", { detail: file }));
       }
     }

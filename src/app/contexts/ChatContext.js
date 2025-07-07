@@ -164,14 +164,11 @@ export const ChatProvider = ({ children }) => {
     };
   }, [userId]);
 
-  // 👇 AGREGAR ESTE useEffect AQUÍ (después de la línea 144)
   useEffect(() => {
-    // Solo ejecutar cuando se añade un nuevo mensaje del bot
     if (messages.length === 0) return;
 
     const lastMessage = messages[messages.length - 1];
 
-    // Si es del bot y estamos en modo Oracle + listening
     if (
       lastMessage.from?.type === "bot" &&
       currentSpeechProvider === "oracle" &&
@@ -204,7 +201,6 @@ export const ChatProvider = ({ children }) => {
       if (!file || !connected || !odaService) return false;
 
       try {
-        // Crear mensaje local del attachment
         const attachmentMessage = {
           userId: userId,
           messagePayload: {
@@ -219,7 +215,6 @@ export const ChatProvider = ({ children }) => {
           from: null, // null = usuario
         };
 
-        // Agregar mensaje al estado
         setMessages((prev) => [...prev, attachmentMessage]);
 
         await odaService.sendAttachment(file);

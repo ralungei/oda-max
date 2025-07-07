@@ -1,5 +1,3 @@
-// src/app/services/odaService.js
-
 "use client";
 
 const createOdaService = () => {
@@ -50,7 +48,7 @@ const createOdaService = () => {
               endOfTurn: message?.endOfTurn,
               text: message?.messagePayload?.text,
             });
-            // Notify listeners about new message
+
             messageListeners.forEach((listener) => listener(message));
             return message;
           },
@@ -63,7 +61,6 @@ const createOdaService = () => {
         },
       };
 
-      // Initialize SDK in headless mode
       sdk = new window.WebSDK(chatSettings);
       console.log("✅ [ODA] SDK inicializado:", {
         channelId,
@@ -84,7 +81,7 @@ const createOdaService = () => {
 
   const addStatusChangeListener = (listener) => {
     statusChangeListeners.push(listener);
-    // If SDK already initialized, set up status change event
+
     if (sdk) {
       sdk.on("networkstatuschange", (status) => {
         listener(status);
@@ -96,7 +93,6 @@ const createOdaService = () => {
     if (!sdk) return false;
 
     try {
-      // Extract the text from our message format and send it through the SDK
       const text = message.messagePayload.text;
       console.log("📤 [ODA] Enviando mensaje:", {
         originalMessage: message,
