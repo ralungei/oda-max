@@ -46,6 +46,7 @@ export const ChatProvider = ({ children }) => {
   const [odaService, setOdaService] = useState(null);
   const [speechService, setSpeechService] = useState(null);
   const [currentSpeechProvider, setCurrentSpeechProvider] = useState("browser");
+  const [playingMessageId, setPlayingMessageId] = useState(null);
 
   useEffect(() => {
     const storedUserId =
@@ -103,12 +104,22 @@ export const ChatProvider = ({ children }) => {
     if (!userId) return;
 
     const handleMessage = (data) => {
+      console.log("🎯 [Chat] Mensaje procesado:", {
+        data,
+        hasPayload: !!data?.messagePayload,
+        source: data?.source,
+        endOfTurn: data?.endOfTurn,
+        messageText: data?.messagePayload?.text,
+        messageType: data?.messagePayload?.type,
+      });
+
       if (data && data.source === "BOT" && data.messagePayload) {
         if (
           data.endOfTurn &&
           data.messagePayload.text &&
           data.messagePayload.text.trim()
         ) {
+          console.log("✅ [Chat] Añadiendo mensaje al estado");
           setIsWaitingForResponse(false);
 
           setMessages((prev) => [
@@ -119,7 +130,19 @@ export const ChatProvider = ({ children }) => {
               from: { type: "bot" },
             },
           ]);
+        } else {
+          console.log("⚠️ [Chat] Mensaje no cumple condiciones:", {
+            endOfTurn: data.endOfTurn,
+            hasText: !!data.messagePayload?.text,
+            textTrimmed: data.messagePayload?.text?.trim(),
+          });
         }
+      } else {
+        console.log("⚠️ [Chat] Mensaje descartado:", {
+          hasData: !!data,
+          source: data?.source,
+          hasPayload: !!data?.messagePayload,
+        });
       }
     };
 
@@ -141,6 +164,27 @@ export const ChatProvider = ({ children }) => {
     };
   }, [userId]);
 
+  // 👇 AGREGAR ESTE useEffect AQUÍ (después de la línea 144)
+  useEffect(() => {
+    // Solo ejecutar cuando se añade un nuevo mensaje del bot
+    if (messages.length === 0) return;
+
+    const lastMessage = messages[messages.length - 1];
+
+    // Si es del bot y estamos en modo Oracle + listening
+    if (
+      lastMessage.from?.type === "bot" &&
+      currentSpeechProvider === "oracle" &&
+      isListening &&
+      odaService?.speakMessage
+    ) {
+      if (odaService.cancelAudio) {
+        odaService.cancelAudio();
+      }
+      odaService.speakMessage(lastMessage);
+    }
+  }, [messages, currentSpeechProvider, isListening, odaService]);
+
   const sendMessage = useCallback(
     (text) => {
       if (!text.trim() || !connected || !odaService) return false;
@@ -151,6 +195,39 @@ export const ChatProvider = ({ children }) => {
       setIsWaitingForResponse(true);
 
       return odaService.sendMessage(message);
+    },
+    [connected, userId, odaService]
+  );
+
+  const sendAttachment = useCallback(
+    async (file) => {
+      if (!file || !connected || !odaService) return false;
+
+      try {
+        // Crear mensaje local del attachment
+        const attachmentMessage = {
+          userId: userId,
+          messagePayload: {
+            type: "attachment",
+            attachment: {
+              type: file.type,
+              title: file.name,
+              url: URL.createObjectURL(file), // Para preview local
+            },
+          },
+          date: new Date().toISOString(),
+          from: null, // null = usuario
+        };
+
+        // Agregar mensaje al estado
+        setMessages((prev) => [...prev, attachmentMessage]);
+
+        await odaService.sendAttachment(file);
+        return true;
+      } catch (error) {
+        setError(`Failed to send attachment: ${error.message}`);
+        return false;
+      }
     },
     [connected, userId, odaService]
   );
@@ -230,10 +307,20 @@ export const ChatProvider = ({ children }) => {
     isWaitingForResponse,
     userId,
     sendMessage,
+    sendAttachment,
     clearChat,
     toggleSpeechRecognition,
     setError,
     currentSpeechProvider,
+    speakMessage: odaService?.speakMessage || (() => false),
+    cancelAudio: () => {
+      if (odaService?.cancelAudio) {
+        odaService.cancelAudio();
+      }
+      setPlayingMessageId(null);
+    },
+    playingMessageId,
+    setPlayingMessageId,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

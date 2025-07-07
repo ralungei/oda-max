@@ -1,8 +1,18 @@
 "use client";
 
 import DynamicThemeProvider from "@/app/contexts/DynamicThemeProvider";
-import { Alert, Box, Container, lighten, Paper, Snackbar } from "@mui/material";
+import {
+  Alert,
+  alpha,
+  Box,
+  Container,
+  lighten,
+  Paper,
+  Snackbar,
+  Typography,
+} from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import { useChat } from "../../contexts/ChatContext";
 import { useProject } from "../../contexts/ProjectsContext";
 import NavMenu from "../NavMenu";
@@ -70,6 +80,7 @@ export default function Chat({ onAddProject, onEditProject, onDeleteProject }) {
     isListening,
     isWaitingForResponse,
     sendMessage,
+    sendAttachment,
     clearChat,
     toggleSpeechRecognition,
     setError,
@@ -79,7 +90,47 @@ export default function Chat({ onAddProject, onEditProject, onDeleteProject }) {
   const { getCurrentProject } = useProject();
   const currentProject = getCurrentProject();
 
+  const [isDragOver, setIsDragOver] = useState(false);
+
   const isOracleRecording = currentSpeechProvider === "oracle" && isListening;
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      const isValidType =
+        file.type.startsWith("image/") || file.type === "application/pdf";
+
+      if (isValidType) {
+        // Pass the file to ChatInputBar via a callback or ref
+        // We'll need to modify ChatInputBar to accept external file setting
+        window.dispatchEvent(new CustomEvent("fileDropped", { detail: file }));
+      }
+    }
+  };
 
   const getBackgroundStyle = () => {
     if (currentProject.backgroundImage) {
@@ -103,14 +154,52 @@ export default function Chat({ onAddProject, onEditProject, onDeleteProject }) {
   return (
     <DynamicThemeProvider projectConfig={currentProject}>
       <Box
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         sx={{
           minHeight: "100vh",
           transition: "all 0.5s ease",
+          position: "relative",
           ...getBackgroundStyle(),
         }}
       >
+        {isDragOver && (
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: alpha(
+                currentProject.mainColor || "#007AFF",
+                0.1
+              ),
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+              pointerEvents: "none",
+              backdropFilter: "blur(1px)",
+            }}
+          >
+            <Typography
+              variant="h4"
+              sx={{
+                color: currentProject.mainColor || "#007AFF",
+                fontWeight: 600,
+                textAlign: "center",
+              }}
+            >
+              📎 Drop images or PDFs here
+            </Typography>
+          </Box>
+        )}
+
         <Container
-          maxWidth="md"
+          maxWidth="lg"
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -252,6 +341,7 @@ export default function Chat({ onAddProject, onEditProject, onDeleteProject }) {
             <ChatInputBar
               onSendMessage={sendMessage}
               onToggleSpeechRecognition={toggleSpeechRecognition}
+              onSendAttachment={sendAttachment}
               isConnected={connected}
               isListening={isListening}
               currentSpeechProvider={currentSpeechProvider}

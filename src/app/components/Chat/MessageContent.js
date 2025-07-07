@@ -54,18 +54,34 @@ export default function MessageContent({ message, isFromBot }) {
         </Card>
       );
     case "attachment":
+      const attachment = payload.attachment;
+
+      // Si es imagen, mostrarla directamente
+      if (attachment.type.startsWith("image/")) {
+        return (
+          <Box
+            component="img"
+            src={attachment.url}
+            alt={attachment.title || "Uploaded image"}
+            sx={{
+              maxWidth: 200,
+              maxHeight: 300,
+              borderRadius: 0.5,
+              objectFit: "contain",
+            }}
+          />
+        );
+      }
+
       return (
         <Typography>
-          Attachment: {payload.attachment.type} -
-          <a
-            href={payload.attachment.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View
+          Attachment: {attachment.type} -{" "}
+          <a href={attachment.url} target="_blank" rel="noopener noreferrer">
+            {attachment.title || "View"}
           </a>
         </Typography>
       );
+
     default:
       return (
         <Typography color="error">

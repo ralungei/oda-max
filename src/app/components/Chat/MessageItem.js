@@ -1,17 +1,36 @@
 "use client";
 
-import { Person, PlayArrow } from "@mui/icons-material";
-import { Box, IconButton, useTheme } from "@mui/material";
+import { alpha, Box, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
+import { useChat } from "../../contexts/ChatContext";
 import MessageContent from "./MessageContent";
 
 export default function MessageItem({ message }) {
   const theme = useTheme();
+  const { speakMessage, cancelAudio, playingMessageId, setPlayingMessageId } =
+    useChat();
+
   const isFromBot = message.from;
 
   const primaryColor = theme.palette.primary.main;
   const primaryLight = theme.palette.primary.light;
   const primaryDark = theme.palette.primary.dark;
+
+  const messageId = `${message.userId}-${message.date}`;
+  const isPlaying = playingMessageId === messageId;
+
+  const handlePlayAudio = (message) => {
+    if (isPlaying) {
+      cancelAudio();
+    } else {
+      if (playingMessageId) {
+        cancelAudio();
+      }
+      if (speakMessage(message)) {
+        setPlayingMessageId(messageId);
+      }
+    }
+  };
 
   const botMessageVariants = {
     initial: {
@@ -74,6 +93,22 @@ export default function MessageItem({ message }) {
           }}
         >
           <Box
+            component={motion.div}
+            animate={{
+              boxShadow: isPlaying
+                ? [
+                    "inset 0 0 0px 0px transparent",
+                    `inset 0 0 15px 2px ${theme.palette.primary.main}25`,
+                    `inset 0 0 25px 3px ${theme.palette.primary.main}40`,
+                    `inset 0 0 15px 2px ${theme.palette.primary.main}25`,
+                  ]
+                : "inset 0 0 0px 0px transparent",
+            }}
+            transition={{
+              duration: isPlaying ? 2 : 0.5,
+              repeat: isPlaying ? Infinity : 0,
+              ease: "easeInOut",
+            }}
             sx={{
               backgroundColor: "rgba(246, 246, 246, 0.95)",
               borderRadius: "22px",
@@ -83,7 +118,7 @@ export default function MessageItem({ message }) {
           >
             <MessageContent message={message} isFromBot />
           </Box>
-          <Box
+          {/* <Box
             sx={{
               display: "flex",
               justifyContent: "flex-end",
@@ -103,9 +138,13 @@ export default function MessageItem({ message }) {
                 },
               }}
             >
-              <PlayArrow sx={{ fontSize: 14 }} />
+              {isPlaying ? (
+                <Stop sx={{ fontSize: 14 }} />
+              ) : (
+                <PlayArrow sx={{ fontSize: 14 }} />
+              )}
             </IconButton>
-          </Box>
+          </Box> */}
         </motion.div>
       ) : (
         <motion.div
@@ -118,42 +157,27 @@ export default function MessageItem({ message }) {
             alignItems: "flex-start",
             maxWidth: "80%",
             width: "auto",
-            borderRadius: "22px",
-            background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryDark} 100%)`,
-            color: "#fff",
-            padding: "6px 14px 6px 8px",
-            boxShadow: `0 2px 12px ${primaryColor}20, 0 1px 3px rgba(0, 0, 0, 0.1)`,
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: `1px solid ${primaryLight}30`,
+            ...(message.messagePayload.type === "attachment"
+              ? {
+                  // Sin fondo para attachments
+                  background: "transparent",
+                  padding: 0,
+                  borderRadius: 0,
+                }
+              : {
+                  // Estilo normal para otros mensajes
+                  borderRadius: "22px 22px 5px 22px",
+                  background: `linear-gradient(135deg, ${alpha(
+                    primaryColor,
+                    0.05
+                  )} 0%, ${alpha(primaryDark, 0.3)} 100%)`,
+                  color: "#000",
+                  padding: "6px 16px 6px 16px",
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                }),
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "24px",
-              height: "24px",
-              minWidth: "24px",
-              borderRadius: "50%",
-              backgroundColor: "rgba(255, 255, 255, 0.15)",
-              mr: 1.5,
-              alignSelf: "flex-start",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              backdropFilter: "blur(10px)",
-              WebkitBackdropFilter: "blur(10px)",
-            }}
-          >
-            <Person
-              sx={{
-                fontSize: "14px",
-                color: "#fff",
-                opacity: 0.9,
-              }}
-            />
-          </Box>
-
           <Box sx={{ flexGrow: 1, pt: "2px" }}>
             <MessageContent message={message} />
           </Box>

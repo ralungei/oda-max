@@ -1,14 +1,22 @@
 "use client";
 
-import { Box, IconButton, Stack, TextField } from "@mui/material";
+import {
+  alpha,
+  Box,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { motion } from "framer-motion";
-import { Forward, Mic } from "lucide-react";
+import { FileText, Forward, Mic, Paperclip, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function ChatInputBar({
   onSendMessage,
   onToggleSpeechRecognition,
+  onSendAttachment,
   isConnected,
   isListening,
   isPreview,
@@ -20,12 +28,33 @@ export default function ChatInputBar({
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const animationFrameRef = useRef(null);
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const fileInputRef = useRef(null);
+
   const theme = useTheme();
 
-  const handleSendMessage = () => {
-    if (!input.trim() || !isConnected) return;
-    onSendMessage(input.trim());
+  const handleSendMessage = async () => {
+    if (!isConnected) return;
+
+    const hasText = input.trim();
+    const hasFile = selectedFile;
+
+    if (!hasText && !hasFile) return;
+
+    if (hasFile && onSendAttachment) {
+      const success = await onSendAttachment(selectedFile);
+      if (!success) return;
+    }
+
+    if (hasText && onSendMessage) {
+      onSendMessage(input.trim());
+    }
+
     setInput("");
+    setSelectedFile(null);
+    setFilePreview(null);
   };
 
   const handleKeyPress = (e) => {
@@ -33,6 +62,32 @@ export default function ChatInputBar({
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleAttachmentClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => setFilePreview(e.target.result);
+        reader.readAsDataURL(file);
+      } else {
+        setFilePreview(null);
+      }
+
+      event.target.value = "";
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
   };
 
   const isOracleListening = currentSpeechProvider === "oracle" && isListening;
@@ -114,8 +169,122 @@ export default function ChatInputBar({
     };
   }, [isOracleListening]);
 
+  useEffect(() => {
+    if (isConnected && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isConnected]);
+
+  useEffect(() => {
+    const handleFileDropped = (event) => {
+      const file = event.detail;
+      setSelectedFile(file);
+
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => setFilePreview(e.target.result);
+        reader.readAsDataURL(file);
+      } else {
+        setFilePreview(null);
+      }
+    };
+
+    window.addEventListener("fileDropped", handleFileDropped);
+    return () => window.removeEventListener("fileDropped", handleFileDropped);
+  }, []);
+
   return (
-    <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        width: "100%",
+        position: "relative",
+      }}
+    >
+      {selectedFile && (
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: "calc(100% + 8px)",
+            left: 0,
+            backgroundColor: alpha("#000", 0.6),
+            backdropFilter: "blur(5px)",
+            borderRadius: 1,
+            padding: 1,
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 0.5,
+            zIndex: 10,
+            width: 80,
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={handleRemoveFile}
+            sx={{
+              position: "absolute",
+              top: -6,
+              right: -6,
+              color: "white",
+              backgroundColor: "#404040",
+              width: 16,
+              height: 16,
+              "&:hover": { backgroundColor: "#555" },
+            }}
+          >
+            <X size={8} />
+          </IconButton>
+
+          {filePreview ? (
+            <Box
+              component="img"
+              src={filePreview}
+              sx={{
+                width: "100%",
+                height: 50,
+                borderRadius: 0.5,
+                objectFit: "contain",
+              }}
+            />
+          ) : (
+            <Box
+              sx={{
+                width: "100%",
+                height: 50,
+                borderRadius: 0.5,
+                backgroundColor: "#404040",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FileText size={20} color="white" />
+            </Box>
+          )}
+
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 500,
+              color: "white",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              display: "block",
+              maxWidth: 70,
+              textAlign: "center",
+              fontSize: "0.65rem",
+            }}
+          >
+            {selectedFile.name}
+          </Typography>
+        </Box>
+      )}
+
       <motion.div
         layout
         style={{
@@ -138,8 +307,26 @@ export default function ChatInputBar({
         }}
       >
         {!isOracleListening && (
+          <IconButton
+            onClick={handleAttachmentClick}
+            disabled={!isConnected}
+            title="Share attachment"
+            sx={{
+              color: theme.palette.text.secondary,
+              "&:hover": {
+                backgroundColor: theme.palette.primary.main + "14",
+              },
+              "&:disabled": {
+                color: theme.palette.text.disabled,
+              },
+              mr: 1,
+            }}
+          >
+            <Paperclip size={18} />
+          </IconButton>
+        )}
+        {!isOracleListening && (
           <TextField
-            autoFocus
             size="small"
             fullWidth
             variant="standard"
@@ -150,17 +337,19 @@ export default function ChatInputBar({
             disabled={!isConnected || isListening}
             multiline
             maxRows={4}
-            InputProps={{
-              disableUnderline: true,
-              inputRef: inputRef,
-              sx: {
-                color: theme.palette.text.primary,
-                "::placeholder": {
-                  color: theme.palette.text.secondary,
+            inputRef={inputRef}
+            slotProps={{
+              input: {
+                disableUnderline: true,
+                sx: {
+                  color: theme.palette.text.primary,
+                  "::placeholder": {
+                    color: theme.palette.text.secondary,
+                  },
                 },
               },
             }}
-            sx={{ px: 2, py: 0.5 }}
+            sx={{ pr: 2, py: 0.5 }}
           />
         )}
         <Stack direction="row" spacing={1} alignItems="center">
@@ -169,15 +358,13 @@ export default function ChatInputBar({
             disabled={!isConnected}
             title={isListening ? "Stop recording" : "Start voice recording"}
             sx={{
-              color: isListening
-                ? "white" // Cambio: icono blanco cuando está grabando
-                : theme.palette.text.secondary,
+              color: isListening ? "white" : theme.palette.text.secondary,
               backgroundColor: isListening
-                ? theme.palette.error.main // Nuevo: fondo rojo cuando está grabando
+                ? theme.palette.error.main
                 : "transparent",
               "&:hover": {
                 backgroundColor: isListening
-                  ? theme.palette.error.dark // Cambio: hover más oscuro cuando está grabando
+                  ? theme.palette.error.dark
                   : theme.palette.primary.main + "14",
               },
               "&:disabled": {
@@ -223,7 +410,9 @@ export default function ChatInputBar({
           {!isOracleListening && (
             <IconButton
               onClick={handleSendMessage}
-              disabled={!isPreview && (!isConnected || !input.trim())}
+              disabled={
+                !isPreview && (!isConnected || (!input.trim() && !selectedFile))
+              }
               title="Send message"
               sx={{
                 backgroundColor: theme.palette.primary.main,
@@ -244,6 +433,13 @@ export default function ChatInputBar({
             </IconButton>
           )}
         </Stack>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.pdf"
+          style={{ display: "none" }}
+          onChange={handleFileSelect}
+        />
       </motion.div>
     </Box>
   );

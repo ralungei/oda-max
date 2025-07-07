@@ -36,10 +36,20 @@ const createOdaService = () => {
         showConnectionStatus: false,
         openChatOnLoad: false,
         clientAuthEnabled: false,
-        enableHeadless: true, // The key setting for headless mode
-        isDebugMode: true, // Enable debug mode to see what's happening
+        enableHeadless: true,
+        isDebugMode: true,
+        enableBotAudioResponse: true,
+        enableAttachment: true,
+        shareMenuItems: ["visual", "file", "audio"],
         delegate: {
           beforeDisplay: (message) => {
+            console.log("📨 [ODA] Mensaje recibido (beforeDisplay):", {
+              message,
+              messageType: message?.messagePayload?.type,
+              source: message?.source,
+              endOfTurn: message?.endOfTurn,
+              text: message?.messagePayload?.text,
+            });
             // Notify listeners about new message
             messageListeners.forEach((listener) => listener(message));
             return message;
@@ -55,7 +65,12 @@ const createOdaService = () => {
 
       // Initialize SDK in headless mode
       sdk = new window.WebSDK(chatSettings);
-      console.log("sdk", sdk);
+      console.log("✅ [ODA] SDK inicializado:", {
+        channelId,
+        uri,
+        userId,
+        settings: chatSettings,
+      });
       return sdk;
     } catch (error) {
       console.error("Error initializing ODA SDK:", error);
@@ -83,6 +98,11 @@ const createOdaService = () => {
     try {
       // Extract the text from our message format and send it through the SDK
       const text = message.messagePayload.text;
+      console.log("📤 [ODA] Enviando mensaje:", {
+        originalMessage: message,
+        extractedText: text,
+        sdkConnected: sdk.isConnected(),
+      });
       sdk.sendMessage(text);
       return true;
     } catch (error) {
@@ -115,6 +135,14 @@ const createOdaService = () => {
     }
   };
 
+  const speakMessage = (message) => {
+    if (sdk && sdk.speakTTS) {
+      sdk.speakTTS(message);
+      return true;
+    }
+    return false;
+  };
+
   return {
     initialize,
     connect,
@@ -123,6 +151,18 @@ const createOdaService = () => {
     sendMessage,
     disconnect,
     isConnected: () => sdk && sdk.isConnected(),
+    speakMessage,
+    cancelAudio: () => {
+      if (sdk && sdk.cancelTTS) {
+        sdk.cancelTTS();
+        return true;
+      }
+      return false;
+    },
+    sendAttachment: (file) => {
+      if (!sdk) throw new Error("SDK not initialized");
+      return sdk.sendAttachment(file);
+    },
   };
 };
 
