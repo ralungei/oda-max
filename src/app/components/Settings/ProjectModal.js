@@ -297,6 +297,7 @@ export default function ProjectModal({
                       display: "flex",
                       flexWrap: "wrap",
                       gap: 1,
+                      mb: 3,
                     }}
                   >
                     {BACKGROUND_IMAGES.map((image, index) => (
@@ -330,28 +331,30 @@ export default function ProjectModal({
                   </Box>
                 </Box>
 
-                <FormControl component="fieldset">
-                  <FormLabel component="legend">
-                    <Typography variant="subtitle2">Speech Service</Typography>
-                  </FormLabel>
-                  <RadioGroup
-                    name="speechProvider"
-                    value={formData.speechProvider}
-                    onChange={handleInputChange}
-                    row
-                  >
-                    <FormControlLabel
-                      value="browser"
-                      control={<Radio size="small" />}
-                      label="Browser"
-                    />
-                    <FormControlLabel
-                      value="oracle"
-                      control={<Radio size="small" />}
-                      label="Oracle"
-                    />
-                  </RadioGroup>
-                </FormControl>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                    Speech Service
+                  </Typography>
+                  <FormControl component="fieldset">
+                    <RadioGroup
+                      name="speechProvider"
+                      value={formData.speechProvider}
+                      onChange={handleInputChange}
+                      row
+                    >
+                      <FormControlLabel
+                        value="browser"
+                        control={<Radio size="small" />}
+                        label="Browser"
+                      />
+                      <FormControlLabel
+                        value="oracle"
+                        control={<Radio size="small" />}
+                        label="Oracle"
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Box>
               </Stack>
             </Box>
 
