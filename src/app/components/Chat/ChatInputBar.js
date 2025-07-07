@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { motion } from "framer-motion";
-import { FileText, Forward, Mic, Paperclip, X } from "lucide-react";
+import { FileText, Forward, Mic, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function ChatInputBar({
@@ -306,7 +306,7 @@ export default function ChatInputBar({
           damping: 25,
         }}
       >
-        {!isOracleListening && (
+        {/* {!isOracleListening && (
           <IconButton
             onClick={handleAttachmentClick}
             disabled={!isConnected}
@@ -324,7 +324,7 @@ export default function ChatInputBar({
           >
             <Paperclip size={18} />
           </IconButton>
-        )}
+        )} */}
         {!isOracleListening && (
           <TextField
             size="small"
@@ -349,7 +349,7 @@ export default function ChatInputBar({
                 },
               },
             }}
-            sx={{ pr: 2, py: 0.5 }}
+            sx={{ pl: 2, pr: 2, py: 0.5 }}
           />
         )}
         <Stack direction="row" spacing={1} alignItems="center">

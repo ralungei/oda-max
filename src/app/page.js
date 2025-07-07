@@ -1,13 +1,13 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Chat from "./components/Chat/Chat";
 import ProjectModal from "./components/Settings/ProjectModal";
 import { ChatProvider } from "./contexts/ChatContext";
 import { useProject } from "./contexts/ProjectsContext";
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get("projectId");
   const router = useRouter();
@@ -46,7 +46,6 @@ export default function Home() {
         setModalOpen(false);
         setSelectedProject(null);
       } else {
-        // Mostrar error o notificación de límite alcanzado
         alert("Maximum number of projects (8) reached");
       }
     }
@@ -81,5 +80,13 @@ export default function Home() {
         onDelete={handleDeleteProject}
       />
     </>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
